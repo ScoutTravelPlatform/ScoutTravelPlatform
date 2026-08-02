@@ -1,183 +1,142 @@
-const priorities = [
+import Image from "next/image";
+import Link from "next/link";
+
+const features = [
   {
-    title: "Payments Due",
-    count: 3,
-    description: "Client payments due within 7 days",
-    status: "Needs attention",
+    eyebrow: "Stay ahead",
+    title: "A smarter daily work queue",
+    description: "See the payments, booking details, deadlines, and client follow-ups that need attention next.",
   },
   {
-    title: "Reservations",
-    count: 2,
-    description: "Reservations missing confirmation details",
-    status: "Review",
+    eyebrow: "Plan beautifully",
+    title: "Every trip in one organized place",
+    description: "Bring client details, dining, park days, documents, and itinerary plans together without the spreadsheet shuffle.",
   },
   {
-    title: "Quote Requests",
-    count: 4,
-    description: "New requests waiting for a response",
-    status: "New",
-  },
-  {
-    title: "Promotion Opportunities",
-    count: 5,
-    description: "Trips that may qualify for a better offer",
-    status: "Opportunity",
+    eyebrow: "Serve confidently",
+    title: "A clear client experience",
+    description: "Give travelers a simple portal for their plans, important dates, and secure information—wherever they are.",
   },
 ];
 
-const trips = [
-  {
-    client: "Smith Family",
-    destination: "Walt Disney World",
-    dates: "August 12–18, 2026",
-    status: "Final payment due",
-  },
-  {
-    client: "Johnson Family",
-    destination: "Royal Caribbean Cruise",
-    dates: "September 5–12, 2026",
-    status: "Dining opens soon",
-  },
-  {
-    client: "Taylor Family",
-    destination: "Universal Orlando",
-    dates: "October 3–7, 2026",
-    status: "Confirmed",
-  },
-];
-
-export default function Home() {
+export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <header className="flex flex-col gap-4 border-b border-slate-800 pb-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-400">
-              Scout Travel
-            </p>
-<div className="mb-8 flex gap-4">
-  <a
-    href="/"
-    className="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white"
-  >
-    Dashboard
-  </a>
+    <main className="min-h-screen overflow-hidden bg-[#f7faf9] text-[#19323c]">
+      <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
+          <Link href="/" className="flex items-center gap-3" aria-label="Scout home">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#0f6d78] text-white">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3L12 3Z" />
+                <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              </svg>
+            </span>
+            <span>
+              <span className="block text-xl font-bold leading-none tracking-tight">Scout</span>
+              <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.24em] text-[#5a7780]">Travel Advisor</span>
+            </span>
+          </Link>
+          <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-600 md:flex" aria-label="Main navigation">
+            <a href="#features" className="transition hover:text-[#0f6d78]">Features</a>
+            <a href="#how-it-works" className="transition hover:text-[#0f6d78]">How it works</a>
+            <a href="#about" className="transition hover:text-[#0f6d78]">Why Scout</a>
+          </nav>
+          <Link href="/login" className="rounded-full border border-[#0f6d78] px-5 py-2.5 text-sm font-bold text-[#0f6d78] transition hover:bg-[#0f6d78] hover:text-white">
+            Advisor sign in
+          </Link>
+        </div>
+      </header>
 
-  <a
-    href="/clients"
-    className="rounded-lg border border-slate-700 px-4 py-2"
-  >
-    Clients
-  </a>
-</div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">
-              Good afternoon, Alex
-            </h1>
-
-            <p className="mt-2 text-slate-400">
-              Here is what needs your attention today.
-            </p>
+      <section className="relative px-6 pb-16 pt-16 text-center lg:px-8 lg:pb-24 lg:pt-24">
+        <div className="pointer-events-none absolute left-1/2 top-4 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="relative mx-auto max-w-5xl">
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#0f6d78]">Thoughtful tools for travel advisors</p>
+          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] tracking-[-0.045em] text-[#243c57] sm:text-6xl lg:text-7xl">
+            Plan every trip with <span className="text-[#5796e6]">clarity, care,</span> and confidence.
+          </h1>
+          <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-600">
+            Scout brings client plans, important dates, payments, commissions, and advisor follow-ups together—so nothing gets lost between booking and departure.
+          </p>
+          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/login" className="rounded-xl bg-[#0f6d78] px-7 py-3.5 font-bold text-white shadow-lg shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[#0c5963]">
+              Open Scout
+            </Link>
+            <a href="#features" className="rounded-xl border border-slate-300 bg-white px-7 py-3.5 font-bold text-[#243c57] transition hover:border-slate-400 hover:bg-slate-50">
+              Explore the platform
+            </a>
           </div>
+        </div>
 
-         <a
-  href="/add-client"
-  className="rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white hover:bg-sky-400"
->
-  Add New Client
-</a>
-        </header>
-
-        <section className="py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Today&apos;s Priorities</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Scout organized your most important actions.
-              </p>
+        <div className="relative mx-auto mt-16 max-w-7xl">
+          <div className="absolute -inset-5 rounded-[2.5rem] bg-gradient-to-r from-sky-100 via-amber-50 to-rose-100 blur-2xl" />
+          <div className="relative overflow-hidden rounded-[2rem] border-8 border-white bg-white shadow-2xl shadow-slate-900/15">
+            <Image
+              src="/scout-hero.png"
+              alt="A peaceful coastal resort at golden hour with a travel journal ready for planning"
+              width={1536}
+              height={1024}
+              priority
+              className="h-[360px] w-full object-cover sm:h-[500px] lg:h-[620px]"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#173f47]/80 via-[#173f47]/10 to-transparent px-6 pb-7 pt-24 text-left text-white sm:px-10 sm:pb-10">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100">From first idea to welcome home</p>
+              <p className="mt-2 max-w-xl text-2xl font-semibold sm:text-3xl">Keep the details organized. Keep the experience personal.</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {priorities.map((priority) => (
-              <div
-                key={priority.title}
-                className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg shadow-black/10"
-              >
-                <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-slate-200">
-                    {priority.title}
-                  </h3>
+      <section id="features" className="bg-white px-6 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0f6d78]">Built around the way advisors work</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-[#243c57] sm:text-5xl">More time advising. Less time chasing details.</h2>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {features.map((feature, index) => (
+              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-[#f7faf9] p-8 shadow-sm">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#dceff0] text-lg font-bold text-[#0f6d78]">0{index + 1}</div>
+                <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#5796e6]">{feature.eyebrow}</p>
+                <h3 className="mt-3 text-2xl font-semibold text-[#243c57]">{feature.title}</h3>
+                <p className="mt-4 leading-7 text-slate-600">{feature.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                  <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-400">
-                    {priority.status}
-                  </span>
-                </div>
-
-                <p className="mt-5 text-4xl font-bold">{priority.count}</p>
-
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  {priority.description}
-                </p>
-
-                <button className="mt-5 text-sm font-semibold text-sky-400 hover:text-sky-300">
-                  View details →
-                </button>
+      <section id="how-it-works" className="px-6 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0f6d78]">One calm workspace</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-[#243c57] sm:text-5xl">Scout remembers what comes next.</h2>
+            <p className="mt-6 text-lg leading-8 text-slate-600">Build the trip once, then let Scout turn the details into a useful timeline for both advisor and client.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {["Add the client and trip", "Organize booking details", "Follow smart deadlines", "Share the client experience"].map((step, index) => (
+              <div key={step} className="flex min-h-36 flex-col justify-between rounded-3xl bg-[#183f47] p-6 text-white even:bg-[#e8b978] even:text-[#2f3b40]">
+                <span className="text-sm font-bold opacity-70">STEP {index + 1}</span>
+                <p className="mt-8 text-xl font-semibold">{step}</p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="grid gap-6 pb-10 lg:grid-cols-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 lg:col-span-2">
-            <div className="border-b border-slate-800 px-6 py-5">
-              <h2 className="text-xl font-semibold">Upcoming Trips</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Your next client departures and important trip milestones.
-              </p>
-            </div>
+      <section id="about" className="px-6 pb-20 lg:px-8 lg:pb-28">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#dceff0] px-8 py-14 text-center sm:px-14 lg:py-20">
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0f6d78]">Your clients trust you with the details</p>
+          <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold tracking-[-0.035em] text-[#243c57] sm:text-5xl">Scout helps you carry them with confidence.</h2>
+          <Link href="/login" className="mt-8 inline-block rounded-xl bg-[#0f6d78] px-7 py-3.5 font-bold text-white transition hover:bg-[#0c5963]">Advisor sign in</Link>
+        </div>
+      </section>
 
-            <div className="divide-y divide-slate-800">
-              {trips.map((trip) => (
-                <div
-                  key={trip.client}
-                  className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-white">{trip.client}</p>
-                    <p className="mt-1 text-sm text-slate-300">
-                      {trip.destination}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">{trip.dates}</p>
-                  </div>
-
-                  <span className="w-fit rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">
-                    {trip.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <aside className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-400">
-              Scout Intelligence
-            </p>
-
-            <h2 className="mt-3 text-xl font-semibold">
-              One opportunity found
-            </h2>
-
-            <p className="mt-4 leading-7 text-slate-400">
-              The Smith Family&apos;s Disney reservation may qualify for a new
-              promotion. Reviewing it could save the client money.
-            </p>
-
-            <button className="mt-6 w-full rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-3 font-semibold text-sky-300 hover:bg-sky-500/20">
-              Review Opportunity
-            </button>
-          </aside>
-        </section>
-      </div>
+      <footer className="border-t border-slate-200 bg-white px-6 py-8 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-semibold text-[#243c57]">Scout Travel Advisor</p>
+          <p>Built to make thoughtful travel planning feel simpler.</p>
+        </div>
+      </footer>
     </main>
   );
 }

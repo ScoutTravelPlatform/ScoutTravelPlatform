@@ -1,17 +1,6 @@
 import Sidebar from "./components/Sidebar";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Scout Travel",
@@ -24,19 +13,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-slate-950">
-  <div className="flex">
-    <Sidebar />
-
-    <main className="flex-1">
-      {children}
-    </main>
-  </div>
-</body>
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full bg-[#f6f8f7]">
+        <a href="#main-content" className="sr-only z-[100] rounded-lg bg-white px-4 py-3 font-semibold text-[#0f6d78] focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div id="main-content" className="min-w-0 flex-1 pb-24 lg:pb-0">
+            {children}
+          </div>
+        </div>
+      </body>
     </html>
   );
 }
