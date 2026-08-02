@@ -34,6 +34,9 @@ export async function proxy(request: NextRequest) {
   const isClientPortal =
     request.nextUrl.pathname.startsWith("/portal/") ||
     request.nextUrl.pathname.startsWith("/api/portal/");
+  const isClientIntake =
+    request.nextUrl.pathname.startsWith("/intake/") ||
+    request.nextUrl.pathname.startsWith("/api/intake/");
   const isTeamInvitation = request.nextUrl.pathname.startsWith("/join/");
   const isPasswordRecovery =
     request.nextUrl.pathname === "/forgot-password" ||
@@ -41,7 +44,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/auth/callback";
   const isPublicLandingPage = request.nextUrl.pathname === "/";
 
-  if (isClientPortal || isTeamInvitation || isPasswordRecovery || isPublicLandingPage) return response;
+  if (isClientPortal || isClientIntake || isTeamInvitation || isPasswordRecovery || isPublicLandingPage) return response;
 
   if (!data.user && !isLogin) {
     const loginUrl = request.nextUrl.clone();
