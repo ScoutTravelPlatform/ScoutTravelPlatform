@@ -109,6 +109,7 @@ const favoriteListSchema = z.array(z.string().trim().min(1).max(200)).max(20).de
 export const clientIntakeContactSchema = z.object({
   firstName: requiredText("First name", 100),
   lastName: requiredText("Last name", 100),
+  email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
   phone: z.string().trim().max(30).optional().nullable().refine(
     (value) => !value || normalizePhoneE164(value) !== null,
     "Enter a valid mobile number.",
@@ -119,6 +120,10 @@ export const clientIntakeContactSchema = z.object({
   stateProvince: optionalText(100),
   postalCode: optionalText(30),
   country: optionalText(100),
+});
+
+export const clientInviteSchema = z.object({
+  contact: requiredText("Email or phone number", 200),
 });
 
 export const clientIntakePreferencesSchema = z.object({

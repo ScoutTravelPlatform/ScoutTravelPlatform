@@ -4,7 +4,7 @@ const nullableText = z.string().nullable();
 
 export const clientIntakeProfileSchema = z.object({
   client: z.object({
-    id: z.uuid(),
+    id: z.uuid().nullable(),
     first_name: z.string(),
     last_name: z.string(),
     email: z.string(),

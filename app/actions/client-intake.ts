@@ -3,7 +3,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createAuthorizedClient } from "@/lib/auth";
+import { createAuthorizedClient, getActiveOrganizationId } from "@/lib/auth";
+import { sendClientIntakeInvitationEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 import type { Database, TablesInsert } from "@/lib/supabase/database.types";
 
@@ -17,6 +18,7 @@ import {
   clientIntakeLoyaltyProgramSchema,
   clientIntakePreferencesSchema,
   clientIntakeTravelerSchema,
+  clientInviteSchema,
   nullableDate,
   nullableValue,
   normalizePhoneE164,
@@ -24,6 +26,72 @@ import {
 
 const idSchema = z.uuid();
 const intakeTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
+
+export async function createClientInviteLinkAction(input: unknown) {
+  const parsed = clientInviteSchema.safeParse(input);
+  if (!parsed.success) return { path: null, expiresAt: null, emailStatus: null, error: "Enter an email or phone number." };
+  const contact = parsed.data.contact.trim();
+  const isEmail = contact.includes("@");
+  const emailResult = isEmail ? z.string().trim().toLowerCase().pipe(z.email()).safeParse(contact) : null;
+  const invitedEmail: string | null = emailResult?.success ? emailResult.data : null;
+  const invitedPhone: string | null = isEmail ? null : normalizePhoneE164(contact);
+  if (isEmail && !invitedEmail) return { path: null, expiresAt: null, emailStatus: null, error: "Enter a valid email address." };
+  if (!isEmail && !invitedPhone) return { path: null, expiresAt: null, emailStatus: null, error: "Enter a valid phone number." };
+
+  const supabase = await createAuthorizedClient();
+  const organizationId = await getActiveOrganizationId(supabase);
+  if (!organizationId) return { path: null, expiresAt: null, emailStatus: null, error: "Scout could not determine your organization." };
+
+  const revokePriorPending = supabase.from("client_intake_links").update({ revoked_at: new Date().toISOString() })
+    .eq("organization_id", organizationId).is("client_id", null).is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString());
+  if (isEmail) {
+    await revokePriorPending.eq("invited_email", invitedEmail as string);
+  } else {
+    await revokePriorPending.eq("invited_phone_e164", invitedPhone as string);
+  }
+
+  const token = randomBytes(32).toString("base64url");
+  const tokenHash = `\\x${createHash("sha256").update(token).digest("hex")}`;
+  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await supabase.from("client_intake_links").insert({
+    client_id: null,
+    invited_email: invitedEmail,
+    invited_phone_e164: invitedPhone,
+    organization_id: organizationId,
+    token_hash: tokenHash,
+    expires_at: expiresAt,
+  } as TablesInsert<"client_intake_links">);
+  if (error) return { path: null, expiresAt: null, emailStatus: null, error: "Scout could not create the invite." };
+
+  let emailStatus: "sent" | "failed" | "not_configured" | null = null;
+  if (isEmail && invitedEmail) {
+    const { data: organization } = await supabase.from("organizations").select("name").eq("id", organizationId).maybeSingle();
+    const { data: authData } = await supabase.auth.getUser();
+    const delivery = await sendClientIntakeInvitationEmail({
+      to: invitedEmail,
+      advisorOrganizationName: organization?.name ?? "your travel advisor",
+      invitationToken: token,
+    });
+    emailStatus = delivery.status;
+    if (delivery.status !== "not_configured") {
+      await supabase.from("email_deliveries").insert({
+        organization_id: organizationId,
+        category: "transactional",
+        recipient_email: invitedEmail,
+        subject: `${organization?.name ?? "Your travel advisor"} would like to plan your trip`,
+        provider: "resend",
+        provider_reference: delivery.providerReference,
+        status: delivery.status,
+        error_code: delivery.errorCode,
+        created_by: authData.user?.id ?? null,
+      });
+    }
+  }
+
+  revalidatePath("/clients");
+  return { path: `/intake/${token}`, expiresAt, emailStatus, error: null };
+}
 
 export async function createClientIntakeLinkAction(clientId: string) {
   const parsed = idSchema.safeParse(clientId);
@@ -64,6 +132,7 @@ export async function submitClientIntakeContactAction(token: string, input: unkn
     intake_token: parsedToken.data,
     first_name: parsed.data.firstName,
     last_name: parsed.data.lastName,
+    email: parsed.data.email ?? null,
     phone: parsed.data.phone ? normalizePhoneE164(parsed.data.phone) : null,
     address_line1: nullableValue(parsed.data.addressLine1),
     address_line2: nullableValue(parsed.data.addressLine2),

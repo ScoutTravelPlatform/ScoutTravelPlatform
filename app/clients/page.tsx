@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createAuthorizedClient } from "../../lib/auth";
+import { isEmailDeliveryConfigured } from "../../lib/email";
 import DeleteClientButton from "./DeleteClientButton";
+import InviteClientForm from "./InviteClientForm";
 
 export default async function ClientsPage() {
   const supabase = await createAuthorizedClient();
@@ -11,7 +13,7 @@ export default async function ClientsPage() {
 
   return (
     <main className="min-h-screen bg-[#f6f8f7] p-8 text-slate-900">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold">Clients</h1>
           <p className="mt-2 text-slate-600">
@@ -19,12 +21,15 @@ export default async function ClientsPage() {
           </p>
         </div>
 
-        <Link
-          href="/add-client"
-          className="rounded-lg bg-sky-500 px-5 py-3 font-semibold text-white"
-        >
-          Add Client
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <InviteClientForm emailDeliveryConfigured={isEmailDeliveryConfigured()} />
+          <Link
+            href="/add-client"
+            className="rounded-lg bg-sky-500 px-5 py-3 font-semibold text-white"
+          >
+            Add Client
+          </Link>
+        </div>
       </div>
 
       {error && (

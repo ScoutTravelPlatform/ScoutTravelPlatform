@@ -420,33 +420,39 @@ export type Database = {
       }
       client_intake_links: {
         Row: {
-          client_id: string
+          client_id: string | null
           created_at: string
           created_by: string | null
           expires_at: string
           id: string
+          invited_email: string | null
+          invited_phone_e164: string | null
           organization_id: string
           revoked_at: string | null
           token_hash: string
           updated_at: string
         }
         Insert: {
-          client_id: string
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           expires_at: string
           id?: string
+          invited_email?: string | null
+          invited_phone_e164?: string | null
           organization_id: string
           revoked_at?: string | null
           token_hash: string
           updated_at?: string
         }
         Update: {
-          client_id?: string
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           expires_at?: string
           id?: string
+          invited_email?: string | null
+          invited_phone_e164?: string | null
           organization_id?: string
           revoked_at?: string | null
           token_hash?: string
@@ -2039,6 +2045,7 @@ export type Database = {
           address_line2: string
           city: string
           country: string
+          email: string
           first_name: string
           intake_token: string
           last_name: string

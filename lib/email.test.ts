@@ -30,4 +30,23 @@ describe("client email", () => {
     expect(payload.html).not.toContain("<script>");
     expect(payload.text).toContain("<script>");
   });
+
+  it("renders any URL in the message as a real clickable link, not just visible text", async () => {
+    const request = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: "email-3" }), { status: 200 }),
+    );
+    await deliverClientEmail({
+      apiKey: "secret-key",
+      from: "Scout <hello@example.com>",
+      to: "client@example.com",
+      subject: "Your travel profile",
+      text: "Fill it in here: https://scout.example.com/intake/abc123",
+      category: "transactional",
+      idempotencyKey: "intake-invite-1",
+      request,
+    });
+    const options = request.mock.calls[0][1];
+    const payload = JSON.parse(options.body);
+    expect(payload.html).toContain('<a href="https://scout.example.com/intake/abc123"');
+  });
 });

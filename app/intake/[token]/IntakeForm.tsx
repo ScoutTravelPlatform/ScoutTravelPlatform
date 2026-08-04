@@ -39,12 +39,36 @@ const emptyCelebrationForm = { occasion: "", occasionDate: "", recurringAnnually
 type CelebrationForm = typeof emptyCelebrationForm;
 
 export default function IntakeForm({ token, initialProfile }: { token: string; initialProfile: ClientIntakeProfile }) {
+  const [claimed, setClaimed] = useState(initialProfile.client.id !== null);
+  const [done, setDone] = useState(false);
+
+  if (done) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm md:p-10">
+        <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0f6d78]">All set</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-[#243c57]">Thanks — your advisor has everything they need.</h2>
+        <p className="mt-2 leading-6 text-slate-600">You can close this page now. If anything changes, come back to this same link anytime to update your profile.</p>
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <ContactSection token={token} initialClient={initialProfile.client} />
-      <TravelersSection token={token} initialTravelers={initialProfile.travelers} />
-      <PreferencesSection token={token} initialClient={initialProfile.client} />
-      <CelebrationsSection token={token} initialCelebrations={initialProfile.celebrations} />
+      <ContactSection token={token} initialClient={initialProfile.client} onClaimed={() => setClaimed(true)} />
+      {claimed ? (
+        <>
+          <TravelersSection token={token} initialTravelers={initialProfile.travelers} />
+          <PreferencesSection token={token} initialClient={initialProfile.client} />
+          <CelebrationsSection token={token} initialCelebrations={initialProfile.celebrations} />
+          <div className="flex justify-center">
+            <button type="button" onClick={() => setDone(true)} className="rounded-xl bg-[#0f6d78] px-8 py-3 font-bold text-white hover:bg-[#0c5963]">Done</button>
+          </div>
+        </>
+      ) : (
+        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          Save your contact info above first — the rest of your travel profile will unlock right after.
+        </p>
+      )}
     </div>
   );
 }
@@ -60,10 +84,12 @@ function Card({ eyebrow, title, description, children }: { eyebrow: string; titl
   );
 }
 
-function ContactSection({ token, initialClient }: { token: string; initialClient: ClientIntakeProfile["client"] }) {
+function ContactSection({ token, initialClient, onClaimed }: { token: string; initialClient: ClientIntakeProfile["client"]; onClaimed: () => void }) {
+  const isNew = initialClient.id === null;
   const [form, setForm] = useState({
     firstName: initialClient.first_name,
     lastName: initialClient.last_name,
+    email: isNew ? initialClient.email : "",
     phone: initialClient.phone_e164 ?? "",
     addressLine1: initialClient.address_line1 ?? "",
     addressLine2: initialClient.address_line2 ?? "",
@@ -81,7 +107,9 @@ function ContactSection({ token, initialClient }: { token: string; initialClient
     setMessage("");
     const result = await submitClientIntakeContactAction(token, form);
     setSaving(false);
-    setMessage(result.ok ? "Saved." : result.error ?? "Scout could not save your information.");
+    if (!result.ok) return setMessage(result.error ?? "Scout could not save your information.");
+    setMessage("Saved.");
+    onClaimed();
   }
 
   return (
@@ -90,7 +118,11 @@ function ContactSection({ token, initialClient }: { token: string; initialClient
         <Field label="First name"><input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} className={inputClasses} required /></Field>
         <Field label="Last name"><input value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} className={inputClasses} required /></Field>
         <Field label="Mobile phone"><input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="(555) 555-1234" className={inputClasses} /></Field>
-        <Field label="Email"><input value={initialClient.email} disabled className={`${inputClasses} bg-slate-100 text-slate-500`} /></Field>
+        {isNew ? (
+          <Field label="Email"><input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputClasses} required /></Field>
+        ) : (
+          <Field label="Email"><input value={initialClient.email} disabled className={`${inputClasses} bg-slate-100 text-slate-500`} /></Field>
+        )}
         <label className="md:col-span-2 text-sm font-semibold text-slate-700"><span>Address line 1</span><input value={form.addressLine1} onChange={(e) => setForm((f) => ({ ...f, addressLine1: e.target.value }))} className={`${inputClasses} mt-2 w-full`} /></label>
         <label className="md:col-span-2 text-sm font-semibold text-slate-700"><span>Address line 2</span><input value={form.addressLine2} onChange={(e) => setForm((f) => ({ ...f, addressLine2: e.target.value }))} className={`${inputClasses} mt-2 w-full`} /></label>
         <Field label="City"><input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className={inputClasses} /></Field>

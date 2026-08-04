@@ -21,7 +21,7 @@ export async function deliverClientEmail(input: {
       from: input.from,
       to: [input.to],
       subject: input.subject,
-      html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#0f172a;line-height:1.65">${escapeHtml(input.text).replace(/\n/g, "<br>")}</div>`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#0f172a;line-height:1.65">${linkify(escapeHtml(input.text)).replace(/\n/g, "<br>")}</div>`,
       text: input.text,
       tags: [{ name: "category", value: input.category }],
     }),
@@ -52,3 +52,7 @@ export async function deliverTeamInvitationEmail(input: { apiKey:string; from:st
 }
 
 function escapeHtml(value:string){return value.replace(/[&<>'"]/g,(character)=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[character]??character);}
+
+// Runs on already-escaped text, so matched URLs are safe to drop straight
+// into both the href and the link text without re-escaping.
+function linkify(escapedText:string){return escapedText.replace(/https?:\/\/[^\s<]+/g,(url)=>`<a href="${url}" style="color:#0369a1">${url}</a>`);}
