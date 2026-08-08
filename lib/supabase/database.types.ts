@@ -1322,6 +1322,8 @@ export type Database = {
           cvc_expires_at: string | null
           cvc_reference: string | null
           display_label: string
+          encrypted_cvc: string | null
+          encrypted_pan: string | null
           expiration_month: number | null
           expiration_reference: string | null
           expiration_year: number | null
@@ -1344,6 +1346,8 @@ export type Database = {
           cvc_expires_at?: string | null
           cvc_reference?: string | null
           display_label: string
+          encrypted_cvc?: string | null
+          encrypted_pan?: string | null
           expiration_month?: number | null
           expiration_reference?: string | null
           expiration_year?: number | null
@@ -1366,6 +1370,8 @@ export type Database = {
           cvc_expires_at?: string | null
           cvc_reference?: string | null
           display_label?: string
+          encrypted_cvc?: string | null
+          encrypted_pan?: string | null
           expiration_month?: number | null
           expiration_reference?: string | null
           expiration_year?: number | null
@@ -1928,6 +1934,23 @@ export type Database = {
           portal_token: string
           supplier_name: string
           volatile_cvc_reference: string
+        }
+        Returns: string
+      }
+      add_encrypted_payment_credential: {
+        Args: {
+          authorization_purpose: string
+          authorized_maximum: number
+          card_brand: string
+          card_expiration_month: number
+          card_expiration_year: number
+          card_last_four: string
+          consent_terms_version: string
+          cvc_ciphertext_base64: string
+          label: string
+          pan_ciphertext_base64: string
+          portal_token: string
+          supplier_name: string
         }
         Returns: string
       }
