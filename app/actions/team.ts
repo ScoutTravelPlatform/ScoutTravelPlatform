@@ -55,3 +55,31 @@ export async function revokeTeamInvitationAction(invitationId: string) {
   const supabase = await createAuthorizedClient(); const { error } = await supabase.rpc("revoke_team_invitation", { target_invitation_id: invitationId });
   if (error) return { error: "Scout could not revoke that invitation." }; revalidatePath("/team"); return { error: null };
 }
+
+const approveJoinSchema = z.object({ requestId: z.string().uuid(), role: z.enum(["owner", "admin", "advisor", "assistant", "finance", "read_only"]) });
+export async function approveOrganizationJoinRequestAction(input: unknown) {
+  const parsed = approveJoinSchema.safeParse(input);
+  if (!parsed.success) return { error: "Choose a valid role." };
+  const supabase = await createAuthorizedClient();
+  const { data: organizationId, error } = await supabase.rpc("approve_organization_join_request", { request_id: parsed.data.requestId, assign_role: parsed.data.role });
+  if (error) return { error: "Scout could not approve that join request. Confirm you have permission." };
+  if (organizationId) {
+    try {
+      await syncOrganizationAdvisorSeats(supabase, organizationId);
+    } catch (syncError) {
+      console.error("Stripe seat synchronization failed after join approval", syncError instanceof Error ? syncError.message : "Unknown error");
+    }
+  }
+  revalidatePath("/team");
+  revalidatePath("/billing");
+  return { error: null };
+}
+
+export async function denyOrganizationJoinRequestAction(requestId: string) {
+  if (!z.string().uuid().safeParse(requestId).success) return { error: "Invalid join request." };
+  const supabase = await createAuthorizedClient();
+  const { error } = await supabase.rpc("deny_organization_join_request", { request_id: requestId });
+  if (error) return { error: "Scout could not deny that join request." };
+  revalidatePath("/team");
+  return { error: null };
+}

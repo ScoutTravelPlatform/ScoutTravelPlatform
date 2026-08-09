@@ -1120,6 +1120,47 @@ export type Database = {
           },
         ]
       }
+      organization_join_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          organization_id: string
+          requester_email: string
+          requester_user_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          organization_id: string
+          requester_email: string
+          requester_user_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          organization_id?: string
+          requester_email?: string
+          requester_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_join_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_memberships: {
         Row: {
           created_at: string
@@ -1954,6 +1995,13 @@ export type Database = {
         }
         Returns: string
       }
+      approve_organization_join_request: {
+        Args: {
+          assign_role: Database["public"]["Enums"]["app_role"]
+          request_id: string
+        }
+        Returns: string
+      }
       create_organization: {
         Args: { organization_name: string }
         Returns: string
@@ -1982,11 +2030,23 @@ export type Database = {
         Args: { intake_token: string; traveler_id: string }
         Returns: Json
       }
+      deny_organization_join_request: {
+        Args: { request_id: string }
+        Returns: undefined
+      }
       get_client_intake_profile: {
         Args: { intake_token: string }
         Returns: Json
       }
       get_client_portal: { Args: { portal_token: string }; Returns: Json }
+      get_my_pending_join_request: {
+        Args: never
+        Returns: {
+          organization_name: string
+          request_id: string
+          status: string
+        }[]
+      }
       get_organization_team: {
         Args: { target_organization_id: string }
         Returns: {
@@ -2023,6 +2083,14 @@ export type Database = {
         Args: { target_organization_id: string }
         Returns: boolean
       }
+      list_organization_join_requests: {
+        Args: { target_organization_id: string }
+        Returns: {
+          created_at: string
+          request_id: string
+          requester_email: string
+        }[]
+      }
       list_team_invitations: {
         Args: { target_organization_id: string }
         Returns: {
@@ -2050,6 +2118,10 @@ export type Database = {
         }
         Returns: Json
       }
+      request_join_organization: {
+        Args: { target_organization_id: string }
+        Returns: undefined
+      }
       respond_to_trip_quote: {
         Args: {
           client_response: string
@@ -2061,6 +2133,13 @@ export type Database = {
       revoke_team_invitation: {
         Args: { target_invitation_id: string }
         Returns: undefined
+      }
+      search_organizations: {
+        Args: { query: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
       }
       submit_client_intake_contact: {
         Args: {

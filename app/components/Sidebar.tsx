@@ -23,6 +23,7 @@ export default function Sidebar() {
   if (
     pathname === "/" ||
     pathname === "/login" ||
+    pathname === "/signup" ||
     pathname === "/forgot-password" ||
     pathname === "/reset-password" ||
     pathname === "/onboarding" ||

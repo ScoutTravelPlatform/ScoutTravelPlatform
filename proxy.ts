@@ -30,6 +30,7 @@ export async function proxy(request: NextRequest) {
 
   const { data } = await supabase.auth.getUser();
   const isLogin = request.nextUrl.pathname === "/login";
+  const isSignup = request.nextUrl.pathname === "/signup";
   const isOnboarding = request.nextUrl.pathname === "/onboarding";
   const isClientPortal =
     request.nextUrl.pathname.startsWith("/portal/") ||
@@ -46,7 +47,7 @@ export async function proxy(request: NextRequest) {
 
   if (isClientPortal || isClientIntake || isTeamInvitation || isPasswordRecovery || isPublicLandingPage) return response;
 
-  if (!data.user && !isLogin) {
+  if (!data.user && !isLogin && !isSignup) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
@@ -65,7 +66,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(onboardingUrl);
     }
 
-    if (hasOrganization && (isLogin || isOnboarding)) {
+    if (hasOrganization && (isLogin || isSignup || isOnboarding)) {
       const appUrl = request.nextUrl.clone();
       appUrl.pathname = "/dashboard";
       return NextResponse.redirect(appUrl);

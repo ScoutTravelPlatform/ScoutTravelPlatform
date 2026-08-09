@@ -86,6 +86,44 @@ export async function updatePasswordAction(input: unknown) {
   return { error: null, updated: true };
 }
 
+const signUpSchema = credentialsSchema.extend({ fullName: z.string().trim().min(1).max(150) });
+export async function signUpAction(input: unknown) {
+  const parsed = signUpSchema.safeParse(input);
+  if (!parsed.success) return { error: "Enter your name, a valid email, and a password of at least 8 characters.", confirmed: false };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: { data: { full_name: parsed.data.fullName } },
+  });
+  if (error) return { error: "Scout could not create this account. If you already have one, sign in instead.", confirmed: false };
+  if (!data.session) return { error: null, confirmed: false };
+  return { error: null, confirmed: true };
+}
+
+const searchOrganizationsSchema = z.string().trim().min(1).max(150);
+export async function searchOrganizationsAction(query: unknown) {
+  const parsed = searchOrganizationsSchema.safeParse(query);
+  if (!parsed.success) return { error: null, organizations: [] as { id: string; name: string }[] };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("search_organizations", { query: parsed.data });
+  if (error) return { error: "Scout could not search organizations right now.", organizations: [] as { id: string; name: string }[] };
+  return { error: null, organizations: (data ?? []).map((org) => ({ id: org.id, name: org.name })) };
+}
+
+const requestJoinSchema = z.uuid();
+export async function requestJoinOrganizationAction(organizationId: unknown) {
+  const parsed = requestJoinSchema.safeParse(organizationId);
+  if (!parsed.success) return { error: "Choose an organization to request." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_join_organization", { target_organization_id: parsed.data });
+  if (error) return { error: "Scout could not send that join request." };
+  return { error: null };
+}
+
 export async function createOrganizationAction(name: unknown) {
   const parsed = organizationSchema.safeParse(name);
   if (!parsed.success) return { error: "Enter an organization name." };

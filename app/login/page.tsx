@@ -49,6 +49,9 @@ export default function LoginPage() {
         <button disabled={pending} className="mt-6 w-full rounded-lg bg-sky-500 px-5 py-3 font-semibold text-white disabled:opacity-50">
           {pending ? "Signing in..." : "Sign in"}
         </button>
+        <p className="mt-5 text-center text-sm text-slate-600">
+          New to Scout? <Link href="/signup" className="font-semibold text-sky-700 hover:text-sky-800">Create an account</Link>
+        </p>
       </form>
     </main>
   );
