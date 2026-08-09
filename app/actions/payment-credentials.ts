@@ -29,6 +29,7 @@ export async function addClientPaymentCredentialAction(input: unknown) {
   // below) — unlike client_travelers/client_celebrations, this table's
   // tenant trigger only validates the value against the client, it doesn't
   // populate it from scratch.
+  const brand = detectCardBrand(parsed.data.cardNumber);
   const { data: credential, error } = await supabase.from("payment_credentials").insert({
     organization_id: organizationId,
     client_id: parsed.data.clientId,
@@ -41,7 +42,7 @@ export async function addClientPaymentCredentialAction(input: unknown) {
     cvc_expires_at: new Date(Date.now() + 55 * 60 * 1000).toISOString(),
     credential_type: "card",
     display_label: parsed.data.label,
-    brand: detectCardBrand(parsed.data.cardNumber),
+    brand,
     last_four: lastFour,
     consent_version: "advisor-recorded-v1",
     consent_recorded_at: new Date().toISOString(),
@@ -71,7 +72,18 @@ export async function addClientPaymentCredentialAction(input: unknown) {
   } as TablesInsert<"payment_credential_events">);
 
   revalidatePath(`/clients/${parsed.data.clientId}`);
-  return { ok: true, error: null };
+  return {
+    ok: true,
+    error: null,
+    credential: {
+      id: credential.id,
+      display_label: parsed.data.label,
+      brand,
+      last_four: lastFour,
+      expiration_month: parsed.data.expirationMonth,
+      expiration_year: parsed.data.expirationYear,
+    },
+  };
 }
 
 export async function revokeClientPaymentCredentialAction(credentialId: string, clientId: string) {

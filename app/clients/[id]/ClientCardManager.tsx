@@ -51,7 +51,8 @@ export default function ClientCardManager({ clientId, trips, initialCredentials 
       maximumAmount: form.maximumAmount.trim() ? Number(form.maximumAmount) : null,
     });
     setSaving(false);
-    if (!result.ok) return setMessage(result.error ?? "Scout could not save that card.");
+    if (!result.ok || !result.credential) return setMessage(result.error ?? "Scout could not save that card.");
+    setCredentials((current) => [result.credential, ...current]);
     setFormOpen(false);
     setMessage("Card saved.");
     router.refresh();
