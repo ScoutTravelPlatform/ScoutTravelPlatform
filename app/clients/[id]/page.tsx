@@ -4,6 +4,7 @@ import { createAuthorizedClient } from "../../../lib/auth";
 import ClientProfileEditor from "./ClientProfileEditor";
 import DeleteClientButton from "../DeleteClientButton";
 import ClientIntakeManager from "./ClientIntakeManager";
+import ClientCardManager from "./ClientCardManager";
 
 type ClientProfilePageProps = {
   params: Promise<{
@@ -57,6 +58,7 @@ export default async function ClientProfilePage({
       .from("payment_credentials")
       .select("id,display_label,brand,last_four,expiration_month,expiration_year,status,cvc_expires_at")
       .eq("client_id", id)
+      .eq("status", "active")
       .order("created_at", { ascending: false }),
     supabase
       .from("client_travelers")
@@ -128,28 +130,11 @@ export default async function ClientProfilePage({
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-sky-700">Advisor Card Vault</p>
-              <h2 className="mt-1 text-2xl font-bold">Protected supplier payment cards</h2>
-              <p className="mt-2 text-slate-600">Scout shows VGS aliases only. The real card remains inside VGS.</p>
-            </div>
-            <span className="w-fit rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">Sandbox</span>
-          </div>
-          <div className="mt-5 space-y-3">
-            {paymentCredentials?.length ? paymentCredentials.map((credential) => {
-              return <div key={credential.id} className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-[#f6f8f7] p-4 sm:flex-row sm:items-center">
-                <div>
-                  <p className="font-semibold">{credential.display_label}</p>
-                  <p className="mt-1 text-sm text-slate-600">{credential.brand ?? "Card"} ending {credential.last_four ?? "••••"} · {credential.expiration_month?.toString().padStart(2, "0")}/{credential.expiration_year?.toString().slice(-2)}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">Temporary security-code aliases automatically expire within one hour.</p>
-                </div>
-                <Link href={`/clients/${client.id}/payment-vault/${credential.id}`} className="rounded-lg bg-sky-700 px-4 py-2 text-center font-semibold text-white hover:bg-sky-600">Prepare supplier payment</Link>
-              </div>;
-            }) : <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-slate-600">No protected cards have been saved for this client yet.</div>}
-          </div>
-        </section>
+        <ClientCardManager
+          clientId={client.id}
+          trips={(client.trips ?? []).map((trip) => ({ id: trip.id, trip_name: trip.trip_name ?? "Untitled trip" }))}
+          initialCredentials={paymentCredentials ?? []}
+        />
 
         <div className="mt-6">
           <ClientIntakeManager clientId={client.id} initialActive={intakeIsActive} initialExpiresAt={intakeIsActive ? intakeLink?.expires_at ?? null : null} />

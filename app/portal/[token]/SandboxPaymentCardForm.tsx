@@ -1,16 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { detectCardBrand } from "@/lib/card-brand";
 
 type Props = { token: string; defaultSupplier: string };
-
-function detectBrand(cardNumber: string): string {
-  if (/^4/.test(cardNumber)) return "Visa";
-  if (/^5[1-5]/.test(cardNumber)) return "Mastercard";
-  if (/^3[47]/.test(cardNumber)) return "Amex";
-  if (/^6(?:011|5)/.test(cardNumber)) return "Discover";
-  return "Card";
-}
 
 export default function SandboxPaymentCardForm({ token, defaultSupplier }: Props) {
   const [cardNumber, setCardNumber] = useState("");
@@ -45,7 +38,7 @@ export default function SandboxPaymentCardForm({ token, defaultSupplier }: Props
         cvc,
         expirationMonth: Number(expirationMatch[1]),
         expirationYear: Number(expirationMatch[2].length === 2 ? `20${expirationMatch[2]}` : expirationMatch[2]),
-        brand: detectBrand(cardDigits),
+        brand: detectCardBrand(cardDigits),
         lastFour: cardDigits.slice(-4),
         label,
         supplier,

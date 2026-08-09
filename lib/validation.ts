@@ -165,6 +165,19 @@ export const clientIntakeLoyaltyProgramSchema = z.object({
   memberNumber: requiredText("Member number", 100),
 });
 
+export const clientPaymentCredentialSchema = z.object({
+  clientId: z.uuid(),
+  tripId: z.uuid(),
+  cardNumber: z.string().regex(/^[0-9]{13,19}$/, "Enter a valid card number."),
+  cvc: z.string().regex(/^\d{3,4}$/, "Enter a valid security code."),
+  expirationMonth: z.number().int().min(1).max(12),
+  expirationYear: z.number().int().min(new Date().getFullYear()).max(2200),
+  label: requiredText("Card label", 100),
+  supplier: requiredText("Supplier", 150),
+  purpose: requiredText("Authorized purpose", 500),
+  maximumAmount: z.number().positive().max(10_000_000).nullable(),
+});
+
 export function nullableValue(value: string | null | undefined) {
   const normalized = value?.trim();
   return normalized ? normalized : null;
