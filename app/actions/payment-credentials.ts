@@ -91,7 +91,12 @@ export async function revokeClientPaymentCredentialAction(credentialId: string, 
   if (!parsedId.success) return { ok: false, error: "That card is not valid." };
 
   const supabase = await createAuthorizedClient();
-  const { error } = await supabase.from("payment_credentials").update({ status: "revoked" }).eq("id", parsedId.data);
+  // Revoking actually erases the encrypted PAN/CVC, not just hides the row —
+  // an advisor who removes a card expects the data to be gone, not retained
+  // indefinitely under a different status.
+  const { error } = await supabase.from("payment_credentials")
+    .update({ status: "revoked", encrypted_pan: null, encrypted_cvc: null })
+    .eq("id", parsedId.data);
   if (error) return { ok: false, error: "Scout could not remove that card." };
 
   revalidatePath(`/clients/${clientId}`);

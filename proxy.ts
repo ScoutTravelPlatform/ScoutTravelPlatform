@@ -4,11 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   if (process.env.SCOUT_AUTH_ENABLED !== "true") return NextResponse.next();
 
-  // VGS Show.js authenticates this machine-to-machine request with the
-  // short-lived HMAC token verified by the route handler itself. It does not
-  // carry an advisor's Supabase browser session and must not be redirected to
-  // the interactive login page.
-  if (request.nextUrl.pathname === "/api/secure-card-display") {
+  // Vercel Cron invokes this on a schedule with a bearer token the route
+  // itself verifies (see CRON_SECRET) — it carries no Supabase session
+  // cookie and must not be redirected to the interactive login page.
+  if (request.nextUrl.pathname === "/api/cron/purge-expired-card-data") {
     return NextResponse.next();
   }
 

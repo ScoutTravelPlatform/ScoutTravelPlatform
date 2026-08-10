@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     allow_promotion_codes: true,
     success_url: `${origin}/billing?checkout=success`,
     cancel_url: `${origin}/billing?checkout=cancelled`,
-    subscription_data: { metadata: { scout_organization_id: membership.organization_id } },
+    subscription_data: { trial_period_days: 14, metadata: { scout_organization_id: membership.organization_id } },
     metadata: { scout_organization_id: membership.organization_id, advisor_seats: String(advisorSeats ?? 0) },
   });
   if (!checkout.url) return Response.redirect(new URL("/billing?error=checkout", origin), 303);
