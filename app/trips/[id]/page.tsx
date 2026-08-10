@@ -370,6 +370,16 @@ const portalIsActive = Boolean(
 
                 <div className="rounded-xl border border-slate-200 bg-[#f6f8f7] p-4">
                   <p className="text-sm text-slate-500">
+                    Room Option
+                  </p>
+
+                  <p className="mt-1 font-semibold">
+                    {trip.room_option || "Not added"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-[#f6f8f7] p-4">
+                  <p className="text-sm text-slate-500">
                     Booking Number
                   </p>
 

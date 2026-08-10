@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/client";
 import { updateTripAction } from "../../../actions/bookings";
+import { findOrCreateSupplierAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction } from "../../../actions/suppliers";
+import CatalogCombobox, { type CatalogOption } from "../../../components/CatalogCombobox";
 
 const supabase = createClient();
 
@@ -19,7 +21,10 @@ export default function EditTripPage() {
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
   const [supplier, setSupplier] = useState("");
+  const [supplierId, setSupplierId] = useState<string | null>(null);
   const [resortHotel, setResortHotel] = useState("");
+  const [propertyId, setPropertyId] = useState<string | null>(null);
+  const [roomOption, setRoomOption] = useState("");
   const [bookingNumber, setBookingNumber] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -54,6 +59,7 @@ export default function EditTripPage() {
       setDestination(data.destination ?? "");
       setSupplier(data.supplier ?? "");
       setResortHotel(data.resort_hotel ?? "");
+      setRoomOption(data.room_option ?? "");
       setBookingNumber(data.booking_number ?? "");
       setStartDate(data.start_date ?? "");
       setEndDate(data.end_date ?? "");
@@ -94,6 +100,7 @@ export default function EditTripPage() {
       destination,
       supplier,
       resortHotel,
+      roomOption,
       bookingNumber,
       startDate,
       endDate,
@@ -157,21 +164,48 @@ export default function EditTripPage() {
             />
           </div>
 
-          <div>
-            <label className="mb-2 block font-medium">Supplier</label>
-            <input
+          <div className="grid gap-5 md:grid-cols-3">
+            <CatalogCombobox
+              label="Supplier"
               value={supplier}
-              onChange={(event) => setSupplier(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white p-3 outline-none focus:border-sky-500"
+              onTextChange={(text) => setSupplier(text)}
+              onSelect={(option: CatalogOption) => {
+                if (option.id !== supplierId) {
+                  setResortHotel("");
+                  setPropertyId(null);
+                  setRoomOption("");
+                }
+                setSupplier(option.name);
+                setSupplierId(option.id);
+              }}
+              search={(query) => searchSuppliersAction(query)}
+              create={(name) => findOrCreateSupplierAction(name)}
             />
-          </div>
 
-          <div>
-            <label className="mb-2 block font-medium">Resort or Hotel</label>
-            <input
+            <CatalogCombobox
+              label="Resort or Hotel"
               value={resortHotel}
-              onChange={(event) => setResortHotel(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white p-3 outline-none focus:border-sky-500"
+              disabled={!supplierId && !resortHotel}
+              placeholder={supplierId ? undefined : "Choose a supplier first"}
+              onTextChange={(text) => setResortHotel(text)}
+              onSelect={(option: CatalogOption) => {
+                if (option.id !== propertyId) setRoomOption("");
+                setResortHotel(option.name);
+                setPropertyId(option.id);
+              }}
+              search={(query) => searchSupplierPropertiesAction({ supplierId: supplierId ?? "", query })}
+              create={(name) => findOrCreateSupplierPropertyAction({ supplierId: supplierId ?? "", name })}
+            />
+
+            <CatalogCombobox
+              label="Room Option"
+              value={roomOption}
+              disabled={!propertyId && !roomOption}
+              placeholder={propertyId ? undefined : "Choose a resort or hotel first"}
+              onTextChange={(text) => setRoomOption(text)}
+              onSelect={(option: CatalogOption) => setRoomOption(option.name)}
+              search={(query) => searchSupplierRoomOptionsAction({ propertyId: propertyId ?? "", query })}
+              create={(name) => findOrCreateSupplierRoomOptionAction({ propertyId: propertyId ?? "", name })}
             />
           </div>
 

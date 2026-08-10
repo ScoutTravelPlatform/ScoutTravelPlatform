@@ -16,7 +16,7 @@ export default async function QuotesPage() {
     clientName: `${trip.clients?.first_name ?? ""} ${trip.clients?.last_name ?? ""}`.trim() || "Client",
   }));
   const tripById = new Map(trips.map((trip) => [trip.id, trip]));
-  const optionsByQuoteId = new Map<string, Array<{ id: string; quote_id: string; title: string; supplier: string; resort_name: string | null; image_url: string | null; total_amount: number; deposit_amount: number | null; is_recommended: boolean; notes: string | null; sort_order: number; created_at: string; updated_at: string }>>();
+  const optionsByQuoteId = new Map<string, Array<{ id: string; quote_id: string; title: string; supplier: string; resort_name: string | null; room_option: string | null; image_url: string | null; total_amount: number; deposit_amount: number | null; is_recommended: boolean; notes: string | null; sort_order: number; created_at: string; updated_at: string }>>();
   for (const option of optionsResult.data ?? []) {
     const existing = optionsByQuoteId.get(option.quote_id) ?? [];
     existing.push(option);

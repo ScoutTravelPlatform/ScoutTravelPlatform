@@ -257,6 +257,7 @@ function toTripRecord(input: ReturnType<typeof tripInputSchema.parse>): OrgInher
     destination: input.destination,
     supplier: nullableValue(input.supplier),
     resort_hotel: nullableValue(input.resortHotel),
+    room_option: nullableValue(input.roomOption),
     booking_number: nullableValue(input.bookingNumber),
     start_date: input.startDate,
     end_date: input.endDate,

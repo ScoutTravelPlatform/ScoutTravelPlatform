@@ -1598,6 +1598,91 @@ export type Database = {
           },
         ]
       }
+      supplier_properties: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_properties_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_room_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_room_options_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       team_invitations: {
         Row: {
           accepted_at: string | null
@@ -1705,6 +1790,7 @@ export type Database = {
           organization_id: string
           quote_id: string
           resort_name: string | null
+          room_option: string | null
           sort_order: number
           supplier: string
           title: string
@@ -1721,6 +1807,7 @@ export type Database = {
           organization_id: string
           quote_id: string
           resort_name?: string | null
+          room_option?: string | null
           sort_order?: number
           supplier: string
           title: string
@@ -1737,6 +1824,7 @@ export type Database = {
           organization_id?: string
           quote_id?: string
           resort_name?: string | null
+          room_option?: string | null
           sort_order?: number
           supplier?: string
           title?: string
@@ -1885,6 +1973,7 @@ export type Database = {
           organization_id: string
           package_price: number | null
           resort_hotel: string | null
+          room_option: string | null
           start_date: string | null
           status: string | null
           supplier: string | null
@@ -1907,6 +1996,7 @@ export type Database = {
           organization_id: string
           package_price?: number | null
           resort_hotel?: string | null
+          room_option?: string | null
           start_date?: string | null
           status?: string | null
           supplier?: string | null
@@ -1929,6 +2019,7 @@ export type Database = {
           organization_id?: string
           package_price?: number | null
           resort_hotel?: string | null
+          room_option?: string | null
           start_date?: string | null
           status?: string | null
           supplier?: string | null
@@ -2034,6 +2125,27 @@ export type Database = {
         Args: { request_id: string }
         Returns: undefined
       }
+      find_or_create_supplier: {
+        Args: { supplier_name: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      find_or_create_supplier_property: {
+        Args: { property_name: string; supplier_id: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      find_or_create_supplier_room_option: {
+        Args: { property_id: string; room_option_name: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       get_client_intake_profile: {
         Args: { intake_token: string }
         Returns: Json
@@ -2135,6 +2247,27 @@ export type Database = {
         Returns: undefined
       }
       search_organizations: {
+        Args: { query: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      search_supplier_properties: {
+        Args: { query: string; supplier_id: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      search_supplier_room_options: {
+        Args: { property_id: string; query: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      search_suppliers: {
         Args: { query: string }
         Returns: {
           id: string

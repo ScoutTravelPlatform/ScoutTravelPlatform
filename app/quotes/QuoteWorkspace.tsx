@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addQuoteAction, addQuoteOptionAction, deleteQuoteAction, deleteQuoteOptionAction, setQuoteOptionRecommendationAction, setQuoteStatusAction, setQuoteVisibilityAction, updateQuoteOptionAction } from "@/app/actions/trip-workspace";
+import { findOrCreateSupplierAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction } from "@/app/actions/suppliers";
+import CatalogCombobox, { type CatalogOption } from "@/app/components/CatalogCombobox";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type QuoteStatus = Tables<"trip_quotes">["status"];
@@ -14,6 +16,7 @@ type QuoteOption = {
   title: string;
   supplier: string;
   resort_name: string | null;
+  room_option: string | null;
   image_url: string | null;
   total_amount: number;
   deposit_amount: number | null;
@@ -43,7 +46,8 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
   const [formOpen, setFormOpen] = useState(false);
   const [optionQuoteId, setOptionQuoteId] = useState<string | null>(null);
   const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
-  const [optionDraft, setOptionDraft] = useState({ title: "", supplier: "", resortName: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false });
+  const emptyOptionDraft = { title: "", supplier: "", supplierId: null as string | null, resortName: "", propertyId: null as string | null, roomOption: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false };
+  const [optionDraft, setOptionDraft] = useState(emptyOptionDraft);
   const [optionSubmitting, setOptionSubmitting] = useState(false);
 
   const visibleQuotes = useMemo(() => quotes.filter((quote) => view === "all" || quote.status === view), [quotes, view]);
@@ -98,16 +102,18 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
   function openOptionForm(quote: QuoteItem) {
     setOptionQuoteId(quote.id);
     setEditingOptionId(null);
-    setOptionDraft({ title: "", supplier: quote.supplier, resortName: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false });
+    setOptionDraft({ ...emptyOptionDraft, supplier: quote.supplier });
   }
 
   function startEditOption(quote: QuoteItem, option: QuoteOption) {
     setOptionQuoteId(quote.id);
     setEditingOptionId(option.id);
     setOptionDraft({
+      ...emptyOptionDraft,
       title: option.title,
       supplier: option.supplier,
       resortName: option.resort_name ?? "",
+      roomOption: option.room_option ?? "",
       imageUrl: option.image_url ?? "",
       totalAmount: String(option.total_amount),
       depositAmount: option.deposit_amount != null ? String(option.deposit_amount) : "",
@@ -119,7 +125,7 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
   function closeOptionForm() {
     setOptionQuoteId(null);
     setEditingOptionId(null);
-    setOptionDraft({ title: "", supplier: "", resortName: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false });
+    setOptionDraft(emptyOptionDraft);
   }
 
   async function submitOption(quote: QuoteItem, event: FormEvent<HTMLFormElement>) {
@@ -132,8 +138,8 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
     }
     setOptionSubmitting(true);
     const result = editingOptionId
-      ? await updateQuoteOptionAction({ optionId: editingOptionId, quoteId: quote.id, tripId: quote.trip_id, title: optionDraft.title, supplier: optionDraft.supplier, resortName: optionDraft.resortName || null, imageUrl: optionDraft.imageUrl || null, totalAmount: amount, depositAmount: deposit, notes: optionDraft.notes || null, isRecommended: optionDraft.isRecommended, sortOrder: 0 })
-      : await addQuoteOptionAction({ quoteId: quote.id, tripId: quote.trip_id, title: optionDraft.title, supplier: optionDraft.supplier, resortName: optionDraft.resortName || null, imageUrl: optionDraft.imageUrl || null, totalAmount: amount, depositAmount: deposit, notes: optionDraft.notes || null, isRecommended: optionDraft.isRecommended, sortOrder: 0 });
+      ? await updateQuoteOptionAction({ optionId: editingOptionId, quoteId: quote.id, tripId: quote.trip_id, title: optionDraft.title, supplier: optionDraft.supplier, resortName: optionDraft.resortName || null, roomOption: optionDraft.roomOption || null, imageUrl: optionDraft.imageUrl || null, totalAmount: amount, depositAmount: deposit, notes: optionDraft.notes || null, isRecommended: optionDraft.isRecommended, sortOrder: 0 })
+      : await addQuoteOptionAction({ quoteId: quote.id, tripId: quote.trip_id, title: optionDraft.title, supplier: optionDraft.supplier, resortName: optionDraft.resortName || null, roomOption: optionDraft.roomOption || null, imageUrl: optionDraft.imageUrl || null, totalAmount: amount, depositAmount: deposit, notes: optionDraft.notes || null, isRecommended: optionDraft.isRecommended, sortOrder: 0 });
     setOptionSubmitting(false);
     if (result.error || !result.data) return setMessage(result.error ?? "Scout could not save that option.");
     setQuotes((current) => current.map((item) => {
@@ -181,7 +187,17 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
         <form onSubmit={addQuote} className="mt-6 grid gap-4 md:grid-cols-2">
           <Field label="Trip"><select value={tripId} onChange={(event) => setTripId(event.target.value)} className={inputClasses} required>{trips.length ? trips.map((trip) => <option key={trip.id} value={trip.id}>{trip.clientName} — {trip.tripName}</option>) : <option value="">Add a trip first</option>}</select></Field>
           <Field label="Quote name"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Resort package option" className={inputClasses} required /></Field>
-          <Field label="Supplier"><input value={supplier} onChange={(event) => setSupplier(event.target.value)} placeholder="Disney Destinations" className={inputClasses} required /></Field>
+          <CatalogCombobox
+            label="Supplier"
+            value={supplier}
+            placeholder="Disney Destinations"
+            onTextChange={setSupplier}
+            onSelect={(option: CatalogOption) => setSupplier(option.name)}
+            search={(query) => searchSuppliersAction(query)}
+            create={(name) => findOrCreateSupplierAction(name)}
+            inputClassName={inputClasses}
+            labelClassName="text-sm font-semibold text-slate-700"
+          />
           <Field label="Total price"><input type="number" min="0" step="0.01" value={totalAmount} onChange={(event) => setTotalAmount(event.target.value)} placeholder="0.00" className={inputClasses} required /></Field>
           <Field label="Deposit"><input type="number" min="0" step="0.01" value={depositAmount} onChange={(event) => setDepositAmount(event.target.value)} placeholder="Optional" className={inputClasses} /></Field>
           <Field label="Quote expires"><input type="date" value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} className={inputClasses} /></Field>
@@ -213,8 +229,45 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
               {optionQuoteId === quote.id && <form onSubmit={(event) => submitOption(quote, event)} className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
                 <p className="text-sm font-semibold text-[#243c57] md:col-span-2">{editingOptionId ? "Edit option" : "Add a resort option"}</p>
                 <label className="text-sm font-semibold text-slate-700"><span>Option title</span><input value={optionDraft.title} onChange={(event) => setOptionDraft((current) => ({ ...current, title: event.target.value }))} className={inputClasses} placeholder="Grand villa" required /></label>
-                <label className="text-sm font-semibold text-slate-700"><span>Supplier</span><input value={optionDraft.supplier} onChange={(event) => setOptionDraft((current) => ({ ...current, supplier: event.target.value }))} className={inputClasses} placeholder="Disney Destinations" required /></label>
-                <label className="text-sm font-semibold text-slate-700"><span>Resort / hotel</span><input value={optionDraft.resortName} onChange={(event) => setOptionDraft((current) => ({ ...current, resortName: event.target.value }))} className={inputClasses} placeholder="Old Key West" /></label>
+                <CatalogCombobox
+                  label="Supplier"
+                  value={optionDraft.supplier}
+                  placeholder="Disney Destinations"
+                  onTextChange={(text) => setOptionDraft((current) => ({ ...current, supplier: text }))}
+                  onSelect={(option: CatalogOption) => setOptionDraft((current) => current.supplierId === option.id
+                    ? { ...current, supplier: option.name, supplierId: option.id }
+                    : { ...current, supplier: option.name, supplierId: option.id, resortName: "", propertyId: null, roomOption: "" })}
+                  search={(query) => searchSuppliersAction(query)}
+                  create={(name) => findOrCreateSupplierAction(name)}
+                  inputClassName={inputClasses}
+                  labelClassName="text-sm font-semibold text-slate-700"
+                />
+                <CatalogCombobox
+                  label="Resort / hotel"
+                  value={optionDraft.resortName}
+                  disabled={!optionDraft.supplierId && !optionDraft.resortName}
+                  placeholder={optionDraft.supplierId ? "Old Key West" : "Choose a supplier first"}
+                  onTextChange={(text) => setOptionDraft((current) => ({ ...current, resortName: text }))}
+                  onSelect={(option: CatalogOption) => setOptionDraft((current) => current.propertyId === option.id
+                    ? { ...current, resortName: option.name, propertyId: option.id }
+                    : { ...current, resortName: option.name, propertyId: option.id, roomOption: "" })}
+                  search={(query) => searchSupplierPropertiesAction({ supplierId: optionDraft.supplierId ?? "", query })}
+                  create={(name) => findOrCreateSupplierPropertyAction({ supplierId: optionDraft.supplierId ?? "", name })}
+                  inputClassName={inputClasses}
+                  labelClassName="text-sm font-semibold text-slate-700"
+                />
+                <CatalogCombobox
+                  label="Room option"
+                  value={optionDraft.roomOption}
+                  disabled={!optionDraft.propertyId && !optionDraft.roomOption}
+                  placeholder={optionDraft.propertyId ? "Deluxe Studio" : "Choose a resort or hotel first"}
+                  onTextChange={(text) => setOptionDraft((current) => ({ ...current, roomOption: text }))}
+                  onSelect={(option: CatalogOption) => setOptionDraft((current) => ({ ...current, roomOption: option.name }))}
+                  search={(query) => searchSupplierRoomOptionsAction({ propertyId: optionDraft.propertyId ?? "", query })}
+                  create={(name) => findOrCreateSupplierRoomOptionAction({ propertyId: optionDraft.propertyId ?? "", name })}
+                  inputClassName={inputClasses}
+                  labelClassName="text-sm font-semibold text-slate-700"
+                />
                 <label className="text-sm font-semibold text-slate-700"><span>Image URL</span><input value={optionDraft.imageUrl} onChange={(event) => setOptionDraft((current) => ({ ...current, imageUrl: event.target.value }))} className={inputClasses} placeholder="https://..." /></label>
                 <label className="text-sm font-semibold text-slate-700"><span>Total price</span><input type="number" min="0" step="0.01" value={optionDraft.totalAmount} onChange={(event) => setOptionDraft((current) => ({ ...current, totalAmount: event.target.value }))} className={inputClasses} required /></label>
                 <label className="text-sm font-semibold text-slate-700"><span>Deposit</span><input type="number" min="0" step="0.01" value={optionDraft.depositAmount} onChange={(event) => setOptionDraft((current) => ({ ...current, depositAmount: event.target.value }))} className={inputClasses} /></label>
@@ -224,7 +277,7 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
               </form>}
               <div className="mt-4 space-y-3">{(quote.options ?? []).map((option) => <div key={option.id} className="rounded-xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><div className="flex flex-wrap items-center gap-2"><h5 className="font-semibold text-[#243c57]">{option.title}</h5>{option.is_recommended && <span className="rounded-full bg-[#dceff0] px-3 py-1 text-xs font-semibold text-[#0f6d78]">Recommended</span>}</div><p className="mt-1 text-sm text-slate-500">{option.supplier}{option.resort_name ? ` · ${option.resort_name}` : ""}</p></div>
+                  <div><div className="flex flex-wrap items-center gap-2"><h5 className="font-semibold text-[#243c57]">{option.title}</h5>{option.is_recommended && <span className="rounded-full bg-[#dceff0] px-3 py-1 text-xs font-semibold text-[#0f6d78]">Recommended</span>}</div><p className="mt-1 text-sm text-slate-500">{option.supplier}{option.resort_name ? ` · ${option.resort_name}` : ""}{option.room_option ? ` · ${option.room_option}` : ""}</p></div>
                   <div className="text-right"><p className="text-lg font-semibold text-[#243c57]">{formatMoney(Number(option.total_amount))}</p>{option.deposit_amount != null && <p className="text-sm text-slate-500">{formatMoney(Number(option.deposit_amount))} deposit</p>}</div>
                 </div>
                 {option.image_url && <img src={option.image_url} alt={option.title} className="mt-4 h-36 w-full rounded-xl object-cover" />}

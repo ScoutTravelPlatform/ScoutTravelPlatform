@@ -34,6 +34,7 @@ export const tripInputSchema = z
     destination: requiredText("Destination"),
     supplier: optionalText(200),
     resortHotel: optionalText(200),
+    roomOption: optionalText(200),
     bookingNumber: optionalText(200),
     startDate: isoDate,
     endDate: isoDate,

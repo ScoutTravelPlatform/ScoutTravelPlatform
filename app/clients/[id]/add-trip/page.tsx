@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createTripAction } from "../../../actions/bookings";
+import { findOrCreateSupplierAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction } from "../../../actions/suppliers";
+import CatalogCombobox, { type CatalogOption } from "../../../components/CatalogCombobox";
 
 export default function AddTripPage() {
   const router = useRouter();
@@ -12,7 +14,10 @@ export default function AddTripPage() {
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
   const [supplier, setSupplier] = useState("");
+  const [supplierId, setSupplierId] = useState<string | null>(null);
   const [resortHotel, setResortHotel] = useState("");
+  const [propertyId, setPropertyId] = useState<string | null>(null);
+  const [roomOption, setRoomOption] = useState("");
   const [bookingNumber, setBookingNumber] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -43,6 +48,7 @@ export default function AddTripPage() {
       destination,
       supplier,
       resortHotel,
+      roomOption,
       bookingNumber,
       startDate,
       endDate,
@@ -60,8 +66,8 @@ export default function AddTripPage() {
       return;
     }
 
-    router.push(`/clients/${clientId}`);
     router.refresh();
+    router.push(`/clients/${clientId}`);
   }
 
   return (
@@ -108,28 +114,50 @@ export default function AddTripPage() {
                 />
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block font-medium">Supplier</label>
-                  <input
-                    value={supplier}
-                    onChange={(event) => setSupplier(event.target.value)}
-                    placeholder="Disney Destinations"
-                    className="w-full rounded-lg border border-slate-300 bg-[#f6f8f7] p-3 outline-none focus:border-sky-500"
-                  />
-                </div>
+              <div className="grid gap-5 md:grid-cols-3">
+                <CatalogCombobox
+                  label="Supplier"
+                  value={supplier}
+                  placeholder="Disney Destinations"
+                  onTextChange={(text) => setSupplier(text)}
+                  onSelect={(option: CatalogOption) => {
+                    if (option.id !== supplierId) {
+                      setResortHotel("");
+                      setPropertyId(null);
+                      setRoomOption("");
+                    }
+                    setSupplier(option.name);
+                    setSupplierId(option.id);
+                  }}
+                  search={(query) => searchSuppliersAction(query)}
+                  create={(name) => findOrCreateSupplierAction(name)}
+                />
 
-                <div>
-                  <label className="mb-2 block font-medium">
-                    Resort or Hotel
-                  </label>
-                  <input
-                    value={resortHotel}
-                    onChange={(event) => setResortHotel(event.target.value)}
-                    placeholder="Disney's Polynesian Village Resort"
-                    className="w-full rounded-lg border border-slate-300 bg-[#f6f8f7] p-3 outline-none focus:border-sky-500"
-                  />
-                </div>
+                <CatalogCombobox
+                  label="Resort or Hotel"
+                  value={resortHotel}
+                  disabled={!supplierId}
+                  placeholder={supplierId ? "Disney's Polynesian Village Resort" : "Choose a supplier first"}
+                  onTextChange={(text) => setResortHotel(text)}
+                  onSelect={(option: CatalogOption) => {
+                    if (option.id !== propertyId) setRoomOption("");
+                    setResortHotel(option.name);
+                    setPropertyId(option.id);
+                  }}
+                  search={(query) => searchSupplierPropertiesAction({ supplierId: supplierId ?? "", query })}
+                  create={(name) => findOrCreateSupplierPropertyAction({ supplierId: supplierId ?? "", name })}
+                />
+
+                <CatalogCombobox
+                  label="Room Option"
+                  value={roomOption}
+                  disabled={!propertyId}
+                  placeholder={propertyId ? "Deluxe Studio" : "Choose a resort or hotel first"}
+                  onTextChange={(text) => setRoomOption(text)}
+                  onSelect={(option: CatalogOption) => setRoomOption(option.name)}
+                  search={(query) => searchSupplierRoomOptionsAction({ propertyId: propertyId ?? "", query })}
+                  create={(name) => findOrCreateSupplierRoomOptionAction({ propertyId: propertyId ?? "", name })}
+                />
               </div>
 
               <div>
