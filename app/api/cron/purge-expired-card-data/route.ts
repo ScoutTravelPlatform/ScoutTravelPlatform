@@ -4,7 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // whether an advisor ever looks the credential up again (get_proxy_payment_credential
 // only purges opportunistically, on read). Card-network rules prohibit
 // retaining CVV/CVC after authorization, so this must run on a schedule, not
-// only in response to access. Triggered by Vercel Cron (see vercel.json),
+// only in response to access. Triggered daily by Vercel Cron (see
+// vercel.json — Vercel's Hobby plan only allows one run per day; the
+// opportunistic purge on read still covers the common case immediately),
 // which sends this bearer token automatically once CRON_SECRET is set.
 export async function GET(request: Request) {
   const expected = process.env.CRON_SECRET?.trim();

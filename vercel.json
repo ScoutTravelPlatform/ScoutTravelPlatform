@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/purge-expired-card-data",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
