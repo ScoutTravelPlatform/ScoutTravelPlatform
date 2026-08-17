@@ -8,7 +8,12 @@ const isDev = process.env.NODE_ENV === "development";
 // that same doc's "Without Nonces" pattern instead — a real, if less strict,
 // CSP is a big step up from having none at all, which is where this app
 // started. img-src allows https: broadly because advisors paste arbitrary
-// external image URLs into quote options (QuoteWorkspace.tsx).
+// external image URLs into quote options (QuoteWorkspace.tsx). form-action
+// allows *.stripe.com because the billing checkout/portal forms POST
+// same-origin and then 303-redirect to Stripe's hosted pages (checkout.stripe.com,
+// billing.stripe.com) — Chromium enforces form-action against the final
+// redirect target, not just the form's own action URL, so 'self' alone
+// blocks that redirect outright rather than just restricting the form itself.
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""};
@@ -18,7 +23,7 @@ const cspHeader = `
   connect-src 'self' https://*.supabase.co;
   object-src 'none';
   base-uri 'self';
-  form-action 'self';
+  form-action 'self' https://*.stripe.com;
   frame-ancestors 'none';
   upgrade-insecure-requests;
 `.replace(/\n/g, "");
