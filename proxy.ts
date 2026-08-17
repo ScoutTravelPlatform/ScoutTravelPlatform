@@ -4,10 +4,14 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   if (process.env.SCOUT_AUTH_ENABLED !== "true") return NextResponse.next();
 
-  // Vercel Cron invokes this on a schedule with a bearer token the route
-  // itself verifies (see CRON_SECRET) — it carries no Supabase session
-  // cookie and must not be redirected to the interactive login page.
-  if (request.nextUrl.pathname === "/api/cron/purge-expired-card-data") {
+  // Machine-to-machine routes that verify their own caller (a bearer secret,
+  // a signed webhook payload, etc.) instead of a Supabase session cookie —
+  // they must never be redirected to the interactive login page. Any new
+  // webhook/cron endpoint needs to be added here, or its real caller will
+  // silently get a 307 to /login instead of a response (this is exactly how
+  // the Stripe billing webhook went unnoticed as broken until a direct test).
+  const selfVerifyingRoutes = ["/api/cron/purge-expired-card-data", "/api/billing/webhook"];
+  if (selfVerifyingRoutes.includes(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
