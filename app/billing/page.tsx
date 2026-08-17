@@ -59,8 +59,8 @@ export default async function BillingPage({ searchParams }: Props) {
     </section>
 
     <section className="mt-7 grid gap-5 pb-10 md:grid-cols-3">
-      <Definition title="No prices hard-coded" text="The displayed amount is $49 per advisor seat, while Stripe Price IDs still control the live checkout." />
-      <Definition title="Stripe setup required" text="Create one recurring $49/month advisor seat price in Stripe, then put that Price ID into STRIPE_ADVISOR_PRICE_ID." />
+      <Definition title="No prices hard-coded" text="The displayed amount is $24.99 per advisor seat with a 14-day free trial, while Stripe Price IDs still control the live checkout." />
+      <Definition title="Stripe setup required" text="Create one recurring $24.99/month advisor seat price in Stripe, then put that Price ID into STRIPE_ADVISOR_PRICE_ID." />
       <Definition title="Agency-controlled" text="Only organization owners and administrators can begin checkout or open billing management." />
     </section>
 
