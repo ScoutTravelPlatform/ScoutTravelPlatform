@@ -2084,7 +2084,26 @@ export type Database = {
           portal_token: string
           supplier_name: string
         }
-        Returns: string
+        Returns: {
+          credential_id: string
+          organization_id: string
+          trip_id: string
+        }[]
+      }
+      add_payment_credential_authorization: {
+        Args: {
+          authorization_purpose: string
+          authorized_maximum: number
+          consent_terms_version: string
+          portal_token: string
+          supplier_name: string
+          target_credential_id: string
+        }
+        Returns: {
+          authorization_id: string
+          organization_id: string
+          trip_id: string
+        }[]
       }
       approve_organization_join_request: {
         Args: {

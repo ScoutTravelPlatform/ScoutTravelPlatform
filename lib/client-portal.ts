@@ -42,6 +42,14 @@ export const clientPortalSchema = z.object({
       notes: nullableText,
     })).default([]),
   })),
+  payment_credentials: z.array(z.object({
+    id: z.uuid(),
+    display_label: z.string(),
+    brand: nullableText,
+    last_four: nullableText,
+    expiration_month: z.number().nullable(),
+    expiration_year: z.number().nullable(),
+  })).default([]),
 });
 
 export type ClientPortalData = z.infer<typeof clientPortalSchema>;

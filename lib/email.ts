@@ -31,3 +31,30 @@ export async function sendClientIntakeInvitationEmail(input: { to: string; advis
     idempotencyKey: `client-intake-invite-${input.invitationToken.slice(0, 32)}`,
   });
 }
+
+export async function sendPaymentAuthorizationNotificationEmail(input: {
+  to: string;
+  clientName: string;
+  tripName: string;
+  clientId: string;
+  supplier: string;
+  purpose: string;
+  maximumAmount: number | null;
+  authorizationId: string;
+}): Promise<DeliveryResult> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.SCOUT_EMAIL_FROM;
+  const appUrl = process.env.SCOUT_APP_URL;
+  if (!apiKey || !from || !appUrl) return { status: "not_configured", providerReference: null, errorCode: "email_not_configured" };
+  const clientUrl = `${appUrl.replace(/\/$/, "")}/clients/${input.clientId}`;
+  const amountLine = input.maximumAmount != null ? ` up to $${input.maximumAmount.toFixed(2)}` : "";
+  return deliverClientEmail({
+    apiKey,
+    from,
+    to: input.to,
+    subject: `${input.clientName} authorized a payment for ${input.tripName}`,
+    text: `${input.clientName} authorized Scout to use a card on file for ${input.supplier}${amountLine}.\n\nPurpose: ${input.purpose}\n\nReview it here: ${clientUrl}`,
+    category: "transactional",
+    idempotencyKey: `payment-authorization-${input.authorizationId.slice(0, 32)}`,
+  });
+}
