@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/client";
 import { updateTripAction } from "../../../actions/bookings";
-import { findOrCreateSupplierAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction } from "../../../actions/suppliers";
+import { findOrCreateDestinationAction, findOrCreateSupplierAction, findOrCreateSupplierByDestinationAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchDestinationsAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction, searchSuppliersByDestinationAction } from "../../../actions/suppliers";
 import CatalogCombobox, { type CatalogOption } from "../../../components/CatalogCombobox";
 
 const supabase = createClient();
@@ -20,6 +20,7 @@ export default function EditTripPage() {
 
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
+  const [destinationId, setDestinationId] = useState<string | null>(null);
   const [supplier, setSupplier] = useState("");
   const [supplierId, setSupplierId] = useState<string | null>(null);
   const [resortHotel, setResortHotel] = useState("");
@@ -154,15 +155,24 @@ export default function EditTripPage() {
             />
           </div>
 
-          <div>
-            <label className="mb-2 block font-medium">Destination</label>
-            <input
-              required
-              value={destination}
-              onChange={(event) => setDestination(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white p-3 outline-none focus:border-sky-500"
-            />
-          </div>
+          <CatalogCombobox
+            label="Destination"
+            value={destination}
+            onTextChange={(text) => setDestination(text)}
+            onSelect={(option: CatalogOption) => {
+              if (option.id !== destinationId) {
+                setSupplier("");
+                setSupplierId(null);
+                setResortHotel("");
+                setPropertyId(null);
+                setRoomOption("");
+              }
+              setDestination(option.name);
+              setDestinationId(option.id);
+            }}
+            search={(query) => searchDestinationsAction(query)}
+            create={(name) => findOrCreateDestinationAction(name)}
+          />
 
           <div className="grid gap-5 md:grid-cols-3">
             <CatalogCombobox
@@ -178,8 +188,8 @@ export default function EditTripPage() {
                 setSupplier(option.name);
                 setSupplierId(option.id);
               }}
-              search={(query) => searchSuppliersAction(query)}
-              create={(name) => findOrCreateSupplierAction(name)}
+              search={(query) => destinationId ? searchSuppliersByDestinationAction({ destinationId, query }) : searchSuppliersAction(query)}
+              create={(name) => destinationId ? findOrCreateSupplierByDestinationAction({ destinationId, name }) : findOrCreateSupplierAction(name)}
             />
 
             <CatalogCombobox

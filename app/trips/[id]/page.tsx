@@ -5,11 +5,13 @@ import BookingTasks from "./BookingTasks";
 import PaymentTracker from "./PaymentTracker";
 import CommissionCenter from "./CommissionCenter";
 import ClientTimeline from "./ClientTimeline";
+import PromotionOpportunities from "./PromotionOpportunities";
 import DailyItineraryPlanner from "./DailyItineraryPlanner";
 import ClientPortalManager from "./ClientPortalManager";
 import AdvisorAssignment from "./AdvisorAssignment";
 import DeleteTripButton from "../DeleteTripButton";
 import { isDisneyTrip } from "../../../lib/disney-timeline";
+import { matchDisneyPromotions } from "../../../lib/disney-promotions";
 
 type BookingWorkspacePageProps = {
   params: Promise<{
@@ -488,6 +490,9 @@ const portalIsActive = Boolean(
   initialEvents={timelineEvents ?? []}
   isDisneyTrip={isDisneyTrip([trip.trip_name, trip.destination, trip.supplier, trip.resort_hotel])}
 />
+{isDisneyTrip([trip.trip_name, trip.destination, trip.supplier, trip.resort_hotel]) && (
+  <PromotionOpportunities matches={matchDisneyPromotions(trip)} />
+)}
           </div>
 
           <div className="space-y-6">

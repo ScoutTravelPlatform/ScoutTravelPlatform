@@ -826,6 +826,27 @@ export type Database = {
           },
         ]
       }
+      destinations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       email_deliveries: {
         Row: {
           category: string
@@ -1666,22 +1687,33 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          destination_id: string | null
           id: string
           name: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          destination_id?: string | null
           id?: string
           name: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          destination_id?: string | null
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_invitations: {
         Row: {
@@ -2144,13 +2176,28 @@ export type Database = {
         Args: { request_id: string }
         Returns: undefined
       }
-      find_or_create_supplier: {
-        Args: { supplier_name: string }
+      find_or_create_destination: {
+        Args: { destination_name: string }
         Returns: {
           id: string
           name: string
         }[]
       }
+      find_or_create_supplier:
+        | {
+            Args: { destination_id: string; supplier_name: string }
+            Returns: {
+              id: string
+              name: string
+            }[]
+          }
+        | {
+            Args: { supplier_name: string }
+            Returns: {
+              id: string
+              name: string
+            }[]
+          }
       find_or_create_supplier_property: {
         Args: { property_name: string; supplier_id: string }
         Returns: {
@@ -2265,6 +2312,13 @@ export type Database = {
         Args: { target_invitation_id: string }
         Returns: undefined
       }
+      search_destinations: {
+        Args: { query: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       search_organizations: {
         Args: { query: string }
         Returns: {
@@ -2286,13 +2340,21 @@ export type Database = {
           name: string
         }[]
       }
-      search_suppliers: {
-        Args: { query: string }
-        Returns: {
-          id: string
-          name: string
-        }[]
-      }
+      search_suppliers:
+        | {
+            Args: { destination_id: string; query: string }
+            Returns: {
+              id: string
+              name: string
+            }[]
+          }
+        | {
+            Args: { query: string }
+            Returns: {
+              id: string
+              name: string
+            }[]
+          }
       submit_client_intake_contact: {
         Args: {
           address_line1: string
