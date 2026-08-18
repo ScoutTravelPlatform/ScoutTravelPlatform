@@ -6,6 +6,12 @@ import type { Tables } from "@/lib/supabase/database.types";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// Vercel Cron sends GET, not POST — this was never actually reachable by the
+// scheduler (see vercel.json), only callable by hand. Exporting GET as an
+// alias, rather than renaming POST, keeps this callable either way without
+// disturbing anything that already POSTs to it directly.
+export const GET = POST;
+
 export async function POST(request: Request) {
   if (!hasValidCronSecret(request.headers.get("authorization"))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

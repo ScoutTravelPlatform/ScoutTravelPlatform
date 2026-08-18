@@ -10,7 +10,7 @@ export async function proxy(request: NextRequest) {
   // webhook/cron endpoint needs to be added here, or its real caller will
   // silently get a 307 to /login instead of a response (this is exactly how
   // the Stripe billing webhook went unnoticed as broken until a direct test).
-  const selfVerifyingRoutes = ["/api/cron/purge-expired-card-data", "/api/billing/webhook"];
+  const selfVerifyingRoutes = ["/api/cron/purge-expired-card-data", "/api/billing/webhook", "/api/automations/process"];
   if (selfVerifyingRoutes.includes(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
