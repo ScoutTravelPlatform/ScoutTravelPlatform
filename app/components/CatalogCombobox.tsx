@@ -25,17 +25,27 @@ export default function CatalogCombobox({ label, value, onTextChange, onSelect, 
   const [options, setOptions] = useState<CatalogOption[]>([]);
   const [creating, setCreating] = useState(false);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // search/create are typically inline arrow functions from the caller, so
+  // they get a new identity on every render. Reading them via ref (instead
+  // of putting `search` in the effect's dependency array) means a parent
+  // re-render can't cancel and reschedule the debounce timer below — only
+  // an actual value/disabled/open change does.
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
+  // Searches as soon as the field opens (focus), even with an empty query —
+  // this is what makes it behave like a real dropdown you can click and
+  // browse, not one that only shows anything after you start typing.
   useEffect(() => {
-    if (disabled || !value.trim()) return;
+    if (disabled || !open) return;
     const timeout = setTimeout(async () => {
-      const result = await search(value);
+      const result = await searchRef.current(value);
       setOptions(result.options);
-    }, 300);
+    }, 200);
     return () => clearTimeout(timeout);
-  }, [value, disabled, search]);
+  }, [value, disabled, open]);
 
-  const visibleOptions = disabled || !value.trim() ? [] : options;
+  const visibleOptions = disabled ? [] : options;
 
   function handleFocus() {
     if (blurTimeout.current) clearTimeout(blurTimeout.current);

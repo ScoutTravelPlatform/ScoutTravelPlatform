@@ -8,10 +8,15 @@ type CatalogResult = { error: string | null; options: CatalogOption[] };
 type CatalogCreateResult = { error: string | null; option: CatalogOption | null };
 
 const nameSchema = z.string().trim().min(1).max(200);
+// Search queries allow empty string on purpose — CatalogCombobox searches on
+// focus with no typing yet, to behave like a real browsable dropdown rather
+// than one that shows nothing until you start typing. Creating an entry
+// still requires nameSchema's non-empty name.
+const querySchema = z.string().trim().max(200);
 const idSchema = z.uuid();
 
 export async function searchSuppliersAction(query: unknown): Promise<CatalogResult> {
-  const parsed = nameSchema.safeParse(query);
+  const parsed = querySchema.safeParse(query);
   if (!parsed.success) return { error: null, options: [] };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("search_suppliers", { query: parsed.data });
@@ -29,7 +34,7 @@ export async function findOrCreateSupplierAction(name: unknown): Promise<Catalog
 }
 
 export async function searchDestinationsAction(query: unknown): Promise<CatalogResult> {
-  const parsed = nameSchema.safeParse(query);
+  const parsed = querySchema.safeParse(query);
   if (!parsed.success) return { error: null, options: [] };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("search_destinations", { query: parsed.data });
@@ -46,7 +51,7 @@ export async function findOrCreateDestinationAction(name: unknown): Promise<Cata
   return { error: null, option: data[0] };
 }
 
-const supplierByDestinationSearchSchema = z.object({ destinationId: idSchema, query: nameSchema });
+const supplierByDestinationSearchSchema = z.object({ destinationId: idSchema, query: querySchema });
 export async function searchSuppliersByDestinationAction(input: unknown): Promise<CatalogResult> {
   const parsed = supplierByDestinationSearchSchema.safeParse(input);
   if (!parsed.success) return { error: null, options: [] };
@@ -72,7 +77,7 @@ export async function findOrCreateSupplierByDestinationAction(input: unknown): P
   return { error: null, option: data[0] };
 }
 
-const propertySearchSchema = z.object({ supplierId: idSchema, query: nameSchema });
+const propertySearchSchema = z.object({ supplierId: idSchema, query: querySchema });
 export async function searchSupplierPropertiesAction(input: unknown): Promise<CatalogResult> {
   const parsed = propertySearchSchema.safeParse(input);
   if (!parsed.success) return { error: null, options: [] };
@@ -98,7 +103,7 @@ export async function findOrCreateSupplierPropertyAction(input: unknown): Promis
   return { error: null, option: data[0] };
 }
 
-const roomOptionSearchSchema = z.object({ propertyId: idSchema, query: nameSchema });
+const roomOptionSearchSchema = z.object({ propertyId: idSchema, query: querySchema });
 export async function searchSupplierRoomOptionsAction(input: unknown): Promise<CatalogResult> {
   const parsed = roomOptionSearchSchema.safeParse(input);
   if (!parsed.success) return { error: null, options: [] };
