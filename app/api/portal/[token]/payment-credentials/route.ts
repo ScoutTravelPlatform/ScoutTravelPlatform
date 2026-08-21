@@ -32,11 +32,18 @@ export async function POST(
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Check the authorization details" }, { status: 400 });
 
+  const supabase = await createClient();
+  const { data: allowed } = await supabase.rpc("check_rate_limit", {
+    limit_key: `portal-payment-credentials:${token}`,
+    max_requests: 10,
+    window_seconds: 3600,
+  });
+  if (!allowed) return Response.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+
   const key = getPaymentEncryptionKey();
   const panCiphertext = encryptCardField(parsed.data.cardNumber, key).toString("base64");
   const cvcCiphertext = encryptCardField(parsed.data.cvc, key).toString("base64");
 
-  const supabase = await createClient();
   const { data, error } = await supabase.rpc("add_encrypted_payment_credential", {
     portal_token: token,
     pan_ciphertext_base64: panCiphertext,

@@ -26,6 +26,13 @@ export async function POST(
   if (!parsed.success) return Response.json({ error: "Check the authorization details" }, { status: 400 });
 
   const supabase = await createClient();
+  const { data: allowed } = await supabase.rpc("check_rate_limit", {
+    limit_key: `portal-payment-authorizations:${token}`,
+    max_requests: 10,
+    window_seconds: 3600,
+  });
+  if (!allowed) return Response.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+
   const { data, error } = await supabase.rpc("add_payment_credential_authorization", {
     portal_token: token,
     target_credential_id: parsed.data.credentialId,

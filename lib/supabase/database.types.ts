@@ -1483,6 +1483,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_counters: {
+        Row: {
+          key: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          key: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          key?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       secure_checkout_sessions: {
         Row: {
           actor_user_id: string | null
@@ -2143,6 +2161,14 @@ export type Database = {
           request_id: string
         }
         Returns: string
+      }
+      check_rate_limit: {
+        Args: {
+          limit_key: string
+          max_requests: number
+          window_seconds: number
+        }
+        Returns: boolean
       }
       create_organization: {
         Args: { organization_name: string }

@@ -24,5 +24,13 @@ export async function GET(request: Request) {
     .select("id");
 
   if (error) return Response.json({ error: "Purge failed" }, { status: 500 });
+
+  // Rate-limit counters (see check_rate_limit RPC) are windowed and stale
+  // ones serve no purpose after their window has long since passed — swept
+  // here rather than adding a second cron, since Vercel's Hobby plan only
+  // allows daily schedules.
+  const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  await admin.from("rate_limit_counters").delete().lt("window_start", staleCutoff);
+
   return Response.json({ purged: data?.length ?? 0 });
 }

@@ -31,7 +31,9 @@ export default function CatalogCombobox({ label, value, onTextChange, onSelect, 
   // re-render can't cancel and reschedule the debounce timer below — only
   // an actual value/disabled/open change does.
   const searchRef = useRef(search);
-  searchRef.current = search;
+  useEffect(() => {
+    searchRef.current = search;
+  });
 
   // Searches as soon as the field opens (focus), even with an empty query —
   // this is what makes it behave like a real dropdown you can click and
