@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addQuoteAction, addQuoteOptionAction, deleteQuoteAction, deleteQuoteOptionAction, setQuoteOptionRecommendationAction, setQuoteStatusAction, setQuoteVisibilityAction, updateQuoteOptionAction } from "@/app/actions/trip-workspace";
-import { findOrCreateSupplierAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction } from "@/app/actions/suppliers";
+import { findOrCreateDestinationAction, findOrCreateSupplierAction, findOrCreateSupplierByDestinationAction, findOrCreateSupplierPropertyAction, findOrCreateSupplierRoomOptionAction, searchDestinationsAction, searchSupplierPropertiesAction, searchSupplierRoomOptionsAction, searchSuppliersAction, searchSuppliersByDestinationAction } from "@/app/actions/suppliers";
 import CatalogCombobox, { type CatalogOption } from "@/app/components/CatalogCombobox";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -36,6 +36,8 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
   const [view, setView] = useState<View>("all");
   const [tripId, setTripId] = useState(trips[0]?.id ?? "");
   const [title, setTitle] = useState("");
+  const [destination, setDestination] = useState("");
+  const [destinationId, setDestinationId] = useState<string | null>(null);
   const [supplier, setSupplier] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
@@ -46,7 +48,7 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
   const [formOpen, setFormOpen] = useState(false);
   const [optionQuoteId, setOptionQuoteId] = useState<string | null>(null);
   const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
-  const emptyOptionDraft = { title: "", supplier: "", supplierId: null as string | null, resortName: "", propertyId: null as string | null, roomOption: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false };
+  const emptyOptionDraft = { title: "", destinationName: "", destinationId: null as string | null, supplier: "", supplierId: null as string | null, resortName: "", propertyId: null as string | null, roomOption: "", imageUrl: "", totalAmount: "", depositAmount: "", notes: "", isRecommended: false };
   const [optionDraft, setOptionDraft] = useState(emptyOptionDraft);
   const [optionSubmitting, setOptionSubmitting] = useState(false);
 
@@ -71,7 +73,7 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
       destination: trip.destination,
       clientName: trip.clientName,
     }, ...current]);
-    setTitle(""); setSupplier(""); setTotalAmount(""); setDepositAmount(""); setExpiresOn(""); setNotes(""); setFormOpen(false);
+    setTitle(""); setDestination(""); setDestinationId(null); setSupplier(""); setTotalAmount(""); setDepositAmount(""); setExpiresOn(""); setNotes(""); setFormOpen(false);
     router.refresh();
   }
 
@@ -188,13 +190,28 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
           <Field label="Trip"><select value={tripId} onChange={(event) => setTripId(event.target.value)} className={inputClasses} required>{trips.length ? trips.map((trip) => <option key={trip.id} value={trip.id}>{trip.clientName} — {trip.tripName}</option>) : <option value="">Add a trip first</option>}</select></Field>
           <Field label="Quote name"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Resort package option" className={inputClasses} required /></Field>
           <CatalogCombobox
+            label="Destination"
+            value={destination}
+            placeholder="Walt Disney World Resort"
+            onTextChange={setDestination}
+            onSelect={(option: CatalogOption) => {
+              if (option.id !== destinationId) setSupplier("");
+              setDestination(option.name);
+              setDestinationId(option.id);
+            }}
+            search={(query) => searchDestinationsAction(query)}
+            create={(name) => findOrCreateDestinationAction(name)}
+            inputClassName={inputClasses}
+            labelClassName="text-sm font-semibold text-slate-700"
+          />
+          <CatalogCombobox
             label="Supplier"
             value={supplier}
             placeholder="Disney Destinations"
             onTextChange={setSupplier}
             onSelect={(option: CatalogOption) => setSupplier(option.name)}
-            search={(query) => searchSuppliersAction(query)}
-            create={(name) => findOrCreateSupplierAction(name)}
+            search={(query) => destinationId ? searchSuppliersByDestinationAction({ destinationId, query }) : searchSuppliersAction(query)}
+            create={(name) => destinationId ? findOrCreateSupplierByDestinationAction({ destinationId, name }) : findOrCreateSupplierAction(name)}
             inputClassName={inputClasses}
             labelClassName="text-sm font-semibold text-slate-700"
           />
@@ -230,6 +247,19 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
                 <p className="text-sm font-semibold text-[#243c57] md:col-span-2">{editingOptionId ? "Edit option" : "Add a resort option"}</p>
                 <label className="text-sm font-semibold text-slate-700"><span>Option title</span><input value={optionDraft.title} onChange={(event) => setOptionDraft((current) => ({ ...current, title: event.target.value }))} className={inputClasses} placeholder="Grand villa" required /></label>
                 <CatalogCombobox
+                  label="Destination"
+                  value={optionDraft.destinationName}
+                  placeholder="Walt Disney World Resort"
+                  onTextChange={(text) => setOptionDraft((current) => ({ ...current, destinationName: text }))}
+                  onSelect={(option: CatalogOption) => setOptionDraft((current) => current.destinationId === option.id
+                    ? { ...current, destinationName: option.name, destinationId: option.id }
+                    : { ...current, destinationName: option.name, destinationId: option.id, supplier: "", supplierId: null, resortName: "", propertyId: null, roomOption: "" })}
+                  search={(query) => searchDestinationsAction(query)}
+                  create={(name) => findOrCreateDestinationAction(name)}
+                  inputClassName={inputClasses}
+                  labelClassName="text-sm font-semibold text-slate-700"
+                />
+                <CatalogCombobox
                   label="Supplier"
                   value={optionDraft.supplier}
                   placeholder="Disney Destinations"
@@ -237,8 +267,8 @@ export default function QuoteWorkspace({ initialQuotes, trips }: { initialQuotes
                   onSelect={(option: CatalogOption) => setOptionDraft((current) => current.supplierId === option.id
                     ? { ...current, supplier: option.name, supplierId: option.id }
                     : { ...current, supplier: option.name, supplierId: option.id, resortName: "", propertyId: null, roomOption: "" })}
-                  search={(query) => searchSuppliersAction(query)}
-                  create={(name) => findOrCreateSupplierAction(name)}
+                  search={(query) => optionDraft.destinationId ? searchSuppliersByDestinationAction({ destinationId: optionDraft.destinationId, query }) : searchSuppliersAction(query)}
+                  create={(name) => optionDraft.destinationId ? findOrCreateSupplierByDestinationAction({ destinationId: optionDraft.destinationId, name }) : findOrCreateSupplierAction(name)}
                   inputClassName={inputClasses}
                   labelClassName="text-sm font-semibold text-slate-700"
                 />
